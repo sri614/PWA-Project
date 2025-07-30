@@ -1,14 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
 import './Dashboard.css';
-import { Plus, X, ArrowLeft, Save } from 'lucide-react';
+import { Plus, ArrowLeft, Save } from 'lucide-react';
 import axios from 'axios';
 import Engagements from './Engagements';
 
+
+
 const Dashboard = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const slug = location.pathname.split('/').filter(Boolean).pop();
   const initialFormState = useRef(null);
 
   const [viewMode, setViewMode] = useState('list'); // 'list', 'create', 'edit'
@@ -18,7 +16,7 @@ const Dashboard = () => {
     phone: '',
     company: '',
     jobTitle: '',
-    productInterest: '',
+    product_interest: '',
     industry: '',
     hs_lead_status: 'NEW'
   });
@@ -34,6 +32,59 @@ const Dashboard = () => {
     MEETING: []
   });
   const [hasChanges, setHasChanges] = useState(false);
+const [editDealInline, setEditDealInline] = useState(null);
+const [dealHasChanges, setDealHasChanges] = useState(false);
+const dealInitialState = useRef(null);
+
+
+let dealStageOptions=[
+    {
+      "label": "Qualified",
+      "value": "1094908196"
+    },
+    {
+      "label": "Product reviewed",
+      "value": "1096871688"
+    },
+    {
+      "label": "Proposal Sent",
+      "value": "1094908198"
+    },
+    {
+      "label": "Negotiation",
+      "value": "1094908197"
+    },
+    {
+      "label": "Closed Won",
+      "value": "1094908201"
+    },
+    {
+      "label": "Closed Lost",
+      "value": "1094908202"
+    }
+  ]
+
+  const getDealStageLabel = (value) => {
+  const match = dealStageOptions.find(option => option.value === value);
+  return match ? match.label : value;
+};
+
+const handleUpdateDeal = async () => {
+  try {
+    const apiKey = localStorage.getItem('user_id');
+    await axios.patch(`http://localhost:8000/deals/${editDealInline.id}`, editDealInline, {
+      headers: { 'x-api-key': apiKey }
+    });
+    alert('Deal updated successfully!');
+    dealInitialState.current = JSON.stringify(editDealInline);
+    console.log("deals",editDealInline)
+    setDealHasChanges(false);
+  } catch (err) {
+    alert('Failed to update deal');
+  }
+};
+
+
 
   const AvatarIcon = ({ size = 'normal' }) => (
     <span className={`material-icons-outlined avatar-icon ${size === 'large' ? 'large' : ''}`}>
@@ -102,7 +153,7 @@ const Dashboard = () => {
         hs_lead_status: newL.hs_lead_status || 'NEW',
         sales_representative: apiKey,
         firstname: newL.name,
-        product_interest: newL.productInterest,
+        product_interest: newL.product_interest,
         company: newL.company,
         jobtitle: newL.jobTitle,
         industry: newL.industry
@@ -120,7 +171,7 @@ const Dashboard = () => {
         phone: '',
         company: '',
         jobTitle: '',
-        productInterest: '',
+        product_interest: '',
         industry: '',
         hs_lead_status: 'NEW'
       });
@@ -195,6 +246,7 @@ const Dashboard = () => {
         }
       });
 
+
       initialFormState.current = JSON.stringify(editLead);
       setHasChanges(false);
       alert('Lead updated successfully!');
@@ -202,6 +254,13 @@ const Dashboard = () => {
       setErrors({ api: 'Failed to update lead' });
     }
   };
+
+  const handleInlineDealChange = (e) => {
+  const updated = { ...editDealInline, [e.target.name]: e.target.value };
+  setEditDealInline(updated);
+  setDealHasChanges(JSON.stringify(updated) !== dealInitialState.current);
+};
+
 
   const renderListView = () => (
     <div className="dashboard">
@@ -328,7 +387,7 @@ const Dashboard = () => {
 
         <div className="form-group">
           <label>Product Interest</label>
-          <select name="productInterest" onChange={handleInputChange} value={newL.productInterest}>
+          <select name="product_interest" onChange={handleInputChange} value={newL.product_interest}>
             <option value="">Select Product Interest</option>
             <option value="Geared Motor">Geared Motor</option>
             <option value="Drum Motor">Drum Motor</option>
@@ -396,6 +455,7 @@ const Dashboard = () => {
                 value={editLead?.[field] || ''}
                 onChange={handleEditChange}
                 placeholder={label}
+                disabled
               />
             </div>
           ))}
@@ -453,8 +513,32 @@ const Dashboard = () => {
           <div className="accordion__content">
             {editLead?.deals?.length > 0 ? (
               editLead.deals.map((deal, idx) => (
-                <div className="accordion__entry" key={deal.id || idx}>
-                  <h4 className="accordion__entry-title">{deal.properties.dealname}</h4>
+                
+                <div
+                  className="accordion__entry"
+                  key={deal.id || idx}
+                  onClick={() => {
+                    setViewMode('deal-edit')
+                    const props = deal.properties;
+                    const dealData = {
+                      id: deal.id,
+                      dealname: props.dealname || '',
+                      amount: props.amount || '',
+                      product_interest: props.product_interest || '',
+                      dealstage: props.dealstage || '',
+                      closedate: props.closedate ? new Date(props.closedate).toISOString().slice(0, 10) : '',
+                      pipeline: props.pipeline || '',
+        hs_deal_stage_probability: props.hs_deal_stage_probability 
+  ? parseFloat(props.hs_deal_stage_probability).toFixed(2) 
+  : ''
+                    };
+                    setEditDealInline(dealData);
+                    dealInitialState.current = JSON.stringify(dealData);
+                    setDealHasChanges(false);
+                  }}
+>
+  {/* {editLead.properties} */}
+                  <h4 className="accordion__entry-title">{editDealInline.dealname}</h4>
                   <div className="accordion__entry-details">
                     <div className="detail-row">
                       <span className="detail-label">Amount:</span>
@@ -462,7 +546,7 @@ const Dashboard = () => {
                     </div>
                     <div className="detail-row">
                       <span className="detail-label">Stage:</span>
-                      <span className="detail-value">{deal.properties.dealstage}</span>
+                      <span className="detail-value">{getDealStageLabel(deal.properties.dealstage)}</span>
                     </div>
                     <div className="detail-row">
                       <span className="detail-label">Product:</span>
@@ -535,11 +619,162 @@ const Dashboard = () => {
     </div>
   );
 
+const renderEditDealInline = () => (
+  <div className="dashboard-form">
+    <div className="edit-header">
+      <button
+        className="back-button"
+        onClick={() => setViewMode('edit')}
+      >
+        <ArrowLeft size={18} /> Back
+      </button>
+    </div>
+
+    <div className="deal-header">
+      <div className="avatar-badge large">
+        {editDealInline?.dealname ? editDealInline.dealname.charAt(0).toUpperCase() : ''}
+      </div>
+      <div className="deal-info">
+        <h2>{editDealInline?.dealname}</h2>
+        <p className="deal-stage">{getDealStageLabel(editDealInline?.dealstage)}</p>
+      </div>
+      <button
+        className={`save-button ${dealHasChanges ? 'active' : ''}`}
+        onClick={handleUpdateDeal}
+        disabled={!dealHasChanges}
+      >
+        <Save size={18} /> Save
+      </button>
+    </div>
+
+    <Engagements leadId={editDealInline?.id} type="deal" />
+
+    <form onSubmit={e => { e.preventDefault(); handleUpdateDeal(); }}>
+      <div className="form-grid">
+        {[
+          ['dealname', 'Deal Name', 'text', true],
+          ['amount', 'Amount', 'number', false],
+          ['hs_deal_stage_probability', 'Probability', 'number', false]
+        ].map(([field, label, type, required]) => (
+          <div className="form-group" key={field}>
+            <label>{label}</label>
+            <input
+              type={type}
+              name={field}
+              value={editDealInline?.[field] || ''}
+              onChange={handleInlineDealChange}
+              required={required}
+              placeholder={label}
+            />
+          </div>
+        ))}
+      </div>
+
+      <div className="form-group">
+        <label>Pipeline</label>
+        <input name="pipeline" type="text" value="Manufacturing" disabled />
+      </div>
+
+      <div className="form-group">
+        <label>Close Date</label>
+        <input
+          name="closedate"
+          type="date"
+          onChange={handleInlineDealChange}
+          value={editDealInline.closedate}
+        />
+      </div>
+
+      <div className="form-group">
+        <label>Product Interest</label>
+        <select
+          name="product_interest"
+          onChange={handleInlineDealChange}
+          value={editDealInline.product_interest}
+        >
+          <option value="">Select Product Interest</option>
+          <option value="Geared Motor">Geared Motor</option>
+          <option value="Drum Motor">Drum Motor</option>
+          <option value="Induction Motor">Induction Motor</option>
+          <option value="Vibrator Motor">Vibrator Motor</option>
+        </select>
+      </div>
+
+      <div className="form-group">
+        <label>Deal Stage</label>
+        <select
+          name="dealstage"
+          value={editDealInline.dealstage || ''}
+          onChange={handleInlineDealChange}
+        >
+          <option value="">Select Stage</option>
+          {dealStageOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {errors.api && <p className="error">{errors.api}</p>}
+    </form>
+
+    <div className="accordion">
+      {['NOTE', 'CALL', 'MEETING'].map((type) => (
+        <details key={type} className="accordion__item" open={engagements[type]?.length > 0}>
+          <summary className="accordion__summary">
+            <span className="accordion__title">{type}</span>
+            <span className="accordion__count">
+              {engagements[type]?.length || 0}
+              <span className="accordion__arrow-icon">
+                <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
+            </span>
+          </summary>
+          <div className="accordion__content">
+            {engagements[type]?.length > 0 ? (
+              engagements[type].map((item, idx) => (
+                <div className="accordion__entry" key={idx}>
+                  <h4 className="accordion__entry-title">{item.metadata?.title || `Untitled ${type.toLowerCase()}`}</h4>
+                  <p className="accordion__entry-description">{item.metadata?.body || item.description || 'No description provided'}</p>
+                  {item.createdAt && (
+                    <div className="accordion__entry-meta">
+                      <time dateTime={item.createdAt}>
+                        {new Date(item.createdAt).toLocaleString()}
+                      </time>
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="accordion__empty-state">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#666666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M12 8V12" stroke="#666666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M12 16H12.01" stroke="#666666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <p>No {type.toLowerCase()} engagements found</p>
+              </div>
+            )}
+          </div>
+        </details>
+      ))}
+    </div>
+  </div>
+);
+
+
+
+
   switch (viewMode) {
     case 'create':
       return renderCreateView();
     case 'edit':
       return renderEditView();
+    case 'deal-edit':
+      return renderEditDealInline();
     default:
       return renderListView();
   }

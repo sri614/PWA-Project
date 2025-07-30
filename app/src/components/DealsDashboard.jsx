@@ -18,6 +18,41 @@ const DealsDashboard = () => {
     MEETING: []
   });
   const initialFormState = useRef(null);
+  const [editDealInline, setEditDealInline] = useState(null);
+  const [dealHasChanges, setDealHasChanges] = useState(false);
+  const dealInitialState = useRef(null);
+
+  let dealStageOptions=[
+    {
+      "label": "Qualified",
+      "value": "1094908196"
+    },
+    {
+      "label": "Product reviewed",
+      "value": "1096871688"
+    },
+    {
+      "label": "Proposal Sent",
+      "value": "1094908198"
+    },
+    {
+      "label": "Negotiation",
+      "value": "1094908197"
+    },
+    {
+      "label": "Closed Won",
+      "value": "1094908201"
+    },
+    {
+      "label": "Closed Lost",
+      "value": "1094908202"
+    }
+  ]
+
+  const getDealStageLabel = (value) => {
+  const match = dealStageOptions.find(option => option.value === value);
+  return match ? match.label : value;
+};
 
   const apiKey = localStorage.getItem('user_id');
 
@@ -74,8 +109,13 @@ const DealsDashboard = () => {
         dealstage: p.dealstage || '',
         closedate: p.closedate ? new Date(p.closedate).toISOString().slice(0, 10) : '',
         pipeline: p.pipeline || '',
-        hs_deal_stage_probability: p.hs_deal_stage_probability || ''
+        hs_deal_stage_probability: p.hs_deal_stage_probability 
+  ? parseFloat(p.hs_deal_stage_probability).toFixed(2) 
+  : ''
+
       };
+
+      console.log(dealData)
 
       setEditDeal(dealData);
       initialFormState.current = JSON.stringify(dealData);
@@ -194,7 +234,7 @@ const DealsDashboard = () => {
         </div>
         <div className="deal-info">
           <h2>{editDeal?.dealname}</h2>
-          <p className="deal-stage">{editDeal?.dealstage}</p>
+          <p className="deal-stage">{getDealStageLabel(editDeal?.dealstage)}</p>
         </div>
         <button 
           className={`save-button ${hasChanges ? 'active' : ''}`}
@@ -212,10 +252,8 @@ const DealsDashboard = () => {
           {[
             ['dealname', 'Deal Name', 'text', true],
             ['amount', 'Amount', 'number', false],
-            ['product_interest', 'Product Interest', 'text', false],
             ['pipeline', 'Pipeline', 'text', false],
             ['hs_deal_stage_probability', 'Probability', 'number', false],
-            ['closedate', 'Close Date', 'date', false]
           ].map(([field, label, type, required]) => (
             <div className="form-group" key={field}>
               <label>{label}</label>
@@ -226,28 +264,53 @@ const DealsDashboard = () => {
                 onChange={handleEditChange}
                 required={required}
                 placeholder={label}
+                disabled
               />
             </div>
           ))}
         </div>
 
-        <div className="form-group">
-          <label>Deal Stage</label>
-          <select 
-            name="dealstage" 
-            value={editDeal?.dealstage || ''} 
-            onChange={handleEditChange}
-          >
-            <option value="">Select Stage</option>
-            <option value="Appointment Scheduled">Appointment Scheduled</option>
-            <option value="Qualified to Buy">Qualified to Buy</option>
-            <option value="Presentation Scheduled">Presentation Scheduled</option>
-            <option value="Decision Maker Bought-In">Decision Maker Bought-In</option>
-            <option value="Contract Sent">Contract Sent</option>
-            <option value="Closed Won">Closed Won</option>
-            <option value="Closed Lost">Closed Lost</option>
+ <div className="form-group">
+        <label>Pipeline</label>
+        <input name="pipeline" type='text'  value="Manufacturing" disabled/>
+      </div>
+
+       <div className="form-group">
+        <label>Close Date</label>
+        <input name="closedate" type='date' onChange={handleEditChange} value={editDeal.closedate} />
+      </div>
+
+      <div className="form-group">
+        <label>Product Interest</label>
+        <select name="product_interest" onChange={handleEditChange} value={editDeal.product_interest}>
+            <option value="">Select Product Interest</option>
+            <option value="Geared Motor">Geared Motor</option>
+            <option value="Drum Motor">Drum Motor</option>
+            <option value="Induction Motor">Induction Motor</option>
+            <option value="Vibrator Motor">Vibrator Motor</option>
           </select>
-        </div>
+      </div>
+
+  <div className="form-group">
+    <label>Deal Stage</label>
+    <select
+      name="dealstage"
+      value={editDeal.dealstage || ''}
+      onChange={(e) => {
+        const updated = { ...editDeal, dealstage: e.target.value };
+        setEditDeal(updated);
+        setDealHasChanges(JSON.stringify(updated) !== dealInitialState.current);
+      }}
+    >
+      <option value="">Select Stage</option>
+      {dealStageOptions.map((opt) => (
+        <option key={opt.value} value={opt.value}>
+          {opt.label}
+        </option>
+      ))}
+    </select>
+  </div>
+
 
         {errors.api && <p className="error">{errors.api}</p>}
       </form>

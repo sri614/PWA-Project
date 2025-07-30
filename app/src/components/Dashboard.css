@@ -98,8 +98,6 @@
 }
 
 .dashboard__table th {
-  background-color: #475778;
-  color: #fff;
   font-weight: bold;
   white-space: nowrap;
   position: relative;
@@ -606,7 +604,6 @@ select option {
     position: sticky;
     top: 0;
     z-index: 10;
-    background-color: #475778;
   }
 
   .dashboard__table-body {
