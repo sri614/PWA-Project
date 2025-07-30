@@ -1,0 +1,54 @@
+.task-dashboard {
+  padding: 20px;
+  font-family: sans-serif;
+}
+
+.task-dashboard__title {
+  margin-bottom: 20px;
+}
+
+.task-dashboard__search {
+  margin-bottom: 16px;
+}
+
+.task-dashboard__search-input {
+  width: 100%;
+
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.task-dashboard__table-wrapper {
+  overflow-x: auto;
+  border-radius: 5px;
+}
+
+.task-dashboard__table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+}
+
+.task-dashboard__table-head {
+  background-color: #475778;
+  color: #fff;
+}
+
+.task-dashboard__table-header {
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+  font-size: 14px;
+}
+
+.task-dashboard__table-row {
+  border-bottom: 1px solid #eee;
+}
+
+.task-dashboard__table-cell {
+  padding: 12px;
+  font-size: 13px;
+  word-break: break-word;
+}

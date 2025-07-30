@@ -1,0 +1,29 @@
+.preloader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  color: #666;
+  font-family: sans-serif;
+}
+
+.preloader__icon {
+  animation: spin 1s linear infinite;
+  width: 40px;
+  height: 40px;
+  color: #999;
+  margin-bottom: 10px;
+}
+
+.preloader__text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #444;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

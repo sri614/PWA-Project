@@ -1,0 +1,80 @@
+.settings {
+  padding: 20px;
+  background-color: #f8f9fb;
+  font-family: sans-serif;
+  max-width: 480px;
+  margin: auto;
+}
+
+.settings__card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.settings__card-name {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.settings__card-email {
+  font-size: 14px;
+  color: #666;
+}
+
+.settings__section {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.settings__section-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #333;
+}
+
+.settings__field {
+  margin-bottom: 16px;
+}
+
+.settings__label {
+  display: block;
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 6px;
+}
+
+.settings__input {
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f1f1f1;
+  color: #333;
+}
+
+.settings__logout {
+  width: 100%;
+  padding: 12px;
+  background-color: #ff6751;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.settings__logout:hover {
+  background-color: #ff6751;
+}
