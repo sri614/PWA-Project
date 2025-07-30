@@ -131,7 +131,7 @@ router.get('/products', validateUserId, async (req, res) => {
 // 🔍 GET /deals/:dealId - Get a deal by ID
 router.get('/:dealId', validateUserId, async (req, res) => {
   const { dealId } = req.params;
-
+console.log(`https://api.hubapi.com/crm/v3/objects/deals/${dealId}?properties=${Array.from(allowedFields).join(',')}`)
   try {
     const response = await axios.get(
       `https://api.hubapi.com/crm/v3/objects/deals/${dealId}?properties=${Array.from(allowedFields).join(',')}`,
@@ -248,5 +248,39 @@ router.get('/:dealId/engagements', validateUserId, async (req, res) => {
       });
     }
   });
+
+  router.get('/:dealId/line-items', validateUserId, async (req, res) => {
+  const { dealId } = req.params;
+
+  try {
+    // Step 1: Fetch associated line item IDs
+    const assocRes = await axios.get(
+      `https://api.hubapi.com/crm/v4/objects/deals/${dealId}/associations/line_items`,
+      hubHeader
+    );
+
+    const ids = assocRes.data.results.map(r => r.to?.id || r.toObjectId).filter(Boolean);
+
+    if (!ids.length) {
+      return res.status(200).json({ success: true, results: [] });
+    }
+
+    // Step 2: Batch read line items
+    const batchRes = await axios.post(
+      'https://api.hubapi.com/crm/v3/objects/line_items/batch/read?archived=false',
+      {
+        idProperty: 'hs_object_id',
+        inputs: ids.map(id => ({ id })),
+        properties: ['name', 'quantity', 'price', 'hs_product_id']
+      },
+      hubHeader
+    );
+
+    return res.status(200).json({ success: true, results: batchRes.data.results });
+  } catch (err) {
+    console.error('Get line items error:', err?.response?.data || err.message);
+    return res.status(500).json({ success: false, error: 'Failed to retrieve line items' });
+  }
+});
 
 module.exports = router;

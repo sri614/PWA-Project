@@ -205,7 +205,7 @@ const handleUpdateDeal = async () => {
         company: p.company || '',
         jobtitle: p.jobtitle || '',
         industry: p.industry || '',
-        product_interest: p.product_interest || '',
+        product_interest: p.product_interest ,
         hs_lead_status: p.hs_lead_status || 'NEW',
         deals: deals
       };
@@ -235,7 +235,7 @@ const handleUpdateDeal = async () => {
         company: editLead.company,
         jobtitle: editLead.jobtitle,
         industry: editLead.industry,
-        product_interest: editLead.product_interest,
+        product_interest: editLead.product_interest ,
         hs_lead_status: editLead.hs_lead_status
       };
 
@@ -465,7 +465,7 @@ const handleUpdateDeal = async () => {
           <label>Product Interest</label>
           <select
             name="product_interest"
-            value={editLead?.product_interest || ''}
+            value={editLead.product_interest}
             onChange={handleEditChange}
           >
             <option value="">Select Product</option>
@@ -520,6 +520,7 @@ const handleUpdateDeal = async () => {
                   onClick={() => {
                     setViewMode('deal-edit')
                     const props = deal.properties;
+                    console.log('DEAL PROPS:', props);
                     const dealData = {
                       id: deal.id,
                       dealname: props.dealname || '',
@@ -528,17 +529,14 @@ const handleUpdateDeal = async () => {
                       dealstage: props.dealstage || '',
                       closedate: props.closedate ? new Date(props.closedate).toISOString().slice(0, 10) : '',
                       pipeline: props.pipeline || '',
-        hs_deal_stage_probability: props.hs_deal_stage_probability 
-  ? parseFloat(props.hs_deal_stage_probability).toFixed(2) 
-  : ''
+                      hs_deal_stage_probability: props.hs_deal_stage_probability ? parseFloat(props.hs_deal_stage_probability).toFixed(2) : ''
                     };
                     setEditDealInline(dealData);
                     dealInitialState.current = JSON.stringify(dealData);
                     setDealHasChanges(false);
                   }}
 >
-  {/* {editLead.properties} */}
-                  <h4 className="accordion__entry-title">{editDealInline.dealname}</h4>
+                  <h4 className="accordion__entry-title">{deal.properties.dealname}</h4>
                   <div className="accordion__entry-details">
                     <div className="detail-row">
                       <span className="detail-label">Amount:</span>

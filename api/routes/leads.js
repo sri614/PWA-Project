@@ -220,7 +220,7 @@ router.get('/', validateUserId, async (req, res) => {
           properties: [
             'createdate', 'dealstage', 'dealname', 'sub_status',
             'closedate', 'amount', 'quantity',
-            'hs_deal_stage_probability', 'sales_manager', 'sales_representative'
+            'hs_deal_stage_probability', 'sales_manager', 'sales_representative', 'product_interest', 'lost_reason'
           ],
           sorts: [{ propertyName: 'createdate', direction: 'ASCENDING' }],
           limit: 200
