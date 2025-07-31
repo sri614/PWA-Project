@@ -54,9 +54,9 @@ const DealsDashboard = () => {
 
     const lostReasonOptions = [
     { label: "Select Lost Reason", value: "" },
-    { label: "Not interested", value: "not_interested" },
-    { label: "Lead time", value: "lead_time" },
-    { label: "Price", value: "price" },
+    { label: "Not interested", value: "Not interested" },
+    { label: "Lead time", value: "Lead time" },
+    { label: "Price", value: "Price" },
   ];
 
   const getDealStageLabel = (value) => {
@@ -183,8 +183,11 @@ const canSave = () => {
         dealstage: editDeal.dealstage,
         closedate: editDeal.closedate,
         pipeline: editDeal.pipeline,
-        hs_deal_stage_probability: editDeal.hs_deal_stage_probability
+        hs_deal_stage_probability: editDeal.hs_deal_stage_probability,
+        lost_reason : editDeal.lostReason
       };
+
+      console.log(payload)
 
       await axios.patch(`http://localhost:8000/deals/${editDeal.id}`, payload, {
         headers: { 'x-api-key': apiKey }
