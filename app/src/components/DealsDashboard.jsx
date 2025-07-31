@@ -26,14 +26,15 @@ const DealsDashboard = () => {
   const dealInitialState = useRef(null);
   const [stageManuallyChanged, setStageManuallyChanged] = useState(false);
   const requiresLostReason = editDeal?.dealstage === "1094908202" && stageManuallyChanged;
+    const [productItems, setProductItems] = useState([]);
+
 
 
   
 
   const [showProductModal, setShowProductModal] = useState(false);
-const [productItems, setProductItems] = useState([
-  { name: 'Condensing units', quantity: 2, price: 300000 }
-]);
+
+
 
 const openProductModal = () => setShowProductModal(true);
 const closeProductModal = () => setShowProductModal(false);
@@ -110,6 +111,34 @@ const canSave = () => {
 
 
   const apiKey = localStorage.getItem('user_id');
+
+    useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const ids = '25251714392,25251714391,25251714390,25251776328,25251776327';
+        const res = await axios.get(`http://localhost:8000/deals/products?ids=${encodeURIComponent(ids)}`, {
+          headers: {
+            'x-api-key': apiKey
+          }
+        });
+
+        if (res.data.success && Array.isArray(res.data.products)) {
+         const products = res.data.products.map(prod => ({
+            id: prod.id, // ✅ Add this line
+            name: prod.properties.name,
+            price: Number(prod.properties.price),
+            quantity: 1
+          }));
+
+          setProductItems(products);
+        }
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   useEffect(() => {
     const fetchDeals = async () => {
@@ -404,25 +433,24 @@ setViewMode('edit');
 
 
 
-<div className="products-section">
-  <div className="products-header">
-
-    <h3 className="products-title">Products</h3>
-    <button className="btn btn--primary" onClick={openProductModal}>Add Products</button>
-  </div>
-
-  {productItems.map((item, idx) => (
-    <div className="product-entry" key={idx}>
-      <div className="product-info">
-        <strong>{item.name}</strong>
-        <p className="product-subtext">Qty: {item.quantity} × ₹{item.price}</p>
+    <div className="products-section">
+      <div className="products-header">
+        <h3 className="products-title">Products</h3>
+        <button className="btn btn--primary" onClick={openProductModal}>Add Products</button>
       </div>
-      <div className="product-amount">₹{item.quantity * item.price}</div>
-    </div>
-  ))}
 
-  <hr className="product-divider" />
-</div>
+      {productItems.map((item, idx) => (
+        <div className="product-entry" key={idx}>
+          <div className="product-info">
+            <strong>{item.name}</strong>
+            <p className="product-subtext">Qty: {item.quantity} × ₹{item.price.toLocaleString()}</p>
+          </div>
+          <div className="product-amount">₹{(item.quantity * item.price).toLocaleString()}</div>
+        </div>
+      ))}
+
+      <hr className="product-divider" />
+    </div>
 
 
 {showProductModal && (
@@ -432,31 +460,67 @@ setViewMode('edit');
         <h3>Add Product to Deal</h3>
         <button className="close-button" onClick={closeProductModal}><X /></button>
       </div>
+
       <div className="modal-body form-group">
         <label>Select Product</label>
         <select id="productSelect" className="modal-input">
-          <option>Select Product</option>
-          <option value="Condensing units">Condensing units</option>
-          <option value="Cooling Fan">Cooling Fan</option>
+          <option value="">Select Product</option>
+          {productItems.map((item, idx) => (
+            <option key={idx} value={item.id}>
+              {item.name}
+            </option>
+          ))}
         </select>
-       
       </div>
+
       <div className="form-group">
-         <label>Quantity</label>
+        <label>Quantity</label>
         <input type="number" id="productQty" className="modal-input" defaultValue={1} />
       </div>
+
       <div className="modal-footer">
         <button
-          className="modal-submit-button"
-          onClick={() => {
-            const name = document.getElementById("productSelect").value;
+          className="btn btn--primary"
+          onClick={async () => {
+            const productId = document.getElementById("productSelect").value;
             const quantity = parseInt(document.getElementById("productQty").value, 10);
-            const price = name === "Cooling Fan" ? 150000 : 300000;
-            if (name !== "Select Product" && quantity > 0) {
-              setProductItems([...productItems, { name, quantity, price }]);
-              closeProductModal();
+            const selectedProduct = productItems.find(p => p.id === productId);
+
+            if (productId && quantity > 0 && selectedProduct) {
+              try {
+                const res = await fetch(`http://localhost:8000/deals/${editDeal?.id}/line-items`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': apiKey
+                  },
+                  body: JSON.stringify({
+                    productId: selectedProduct.id,
+                    quantity,
+                    price: selectedProduct.price
+                  })
+                });
+
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                  // Update UI with the new product
+                  setProductItems(prev => [...prev, {
+                    name: selectedProduct.name,
+                    quantity,
+                    price: selectedProduct.price
+                  }]);
+                  closeProductModal();
+                } else {
+                  alert('Failed to add product. Please try again.');
+                }
+              } catch (err) {
+                console.error('API error:', err);
+                alert('Error adding product.');
+              }
             }
-          }}
+          }
+        }
         >
           Add Line Item
         </button>
@@ -464,6 +528,7 @@ setViewMode('edit');
     </div>
   </div>
 )}
+
 
 
 

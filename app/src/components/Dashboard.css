@@ -167,6 +167,22 @@
   z-index: 100;
 }
 
+.btn--primary {
+
+  background: #f26742;
+  color: white;
+  padding: 0.5rem .6rem;
+  border: none;
+  border-radius: 6px;
+  font-size: .8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  cursor: pointer;
+  z-index: 100;
+}
+
 .dashboard-form {
   padding: 30px;
   max-width: 1000px;

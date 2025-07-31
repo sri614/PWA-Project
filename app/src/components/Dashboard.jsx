@@ -424,7 +424,7 @@ const handleUpdateDeal = async () => {
         </div>
         <div className="lead-info">
           <h2>{editLead?.firstname}</h2>
-          <p className="lead-email">{editLead?.email}</p>
+          <p className="lead-email">{editLead?.email}</p>engagements
         </div>
         <button
           className={`save-button ${hasChanges ? 'active' : ''}`}
@@ -591,13 +591,13 @@ const handleUpdateDeal = async () => {
                   <div className="accordion__entry" key={idx}>
                     <h4 className="accordion__entry-title">{item.metadata?.title || `Untitled ${type.toLowerCase()}`}</h4>
                     <p className="accordion__entry-description">{item.metadata?.body || item.description || 'No description provided'}</p>
-                    {item.createdAt && (
-                      <div className="accordion__entry-meta">
-                        <time dateTime={item.createdAt}>
-                          {new Date(item.createdAt).toLocaleString()}
+
+                    <div className="accordion__entry-meta">
+                        <time dateTime={item.engagement.createdAt}>
+                          {new Date(item.engagement.createdAt).toLocaleString()}
                         </time>
                       </div>
-                    )}
+  
                   </div>
                 ))
               ) : (
@@ -646,6 +646,7 @@ const renderEditDealInline = () => (
     </div>
 
     <Engagements leadId={editDealInline?.id} type="deal" />
+
 
     <form onSubmit={e => { e.preventDefault(); handleUpdateDeal(); }}>
       <div className="form-grid">
@@ -737,10 +738,10 @@ const renderEditDealInline = () => (
                 <div className="accordion__entry" key={idx}>
                   <h4 className="accordion__entry-title">{item.metadata?.title || `Untitled ${type.toLowerCase()}`}</h4>
                   <p className="accordion__entry-description">{item.metadata?.body || item.description || 'No description provided'}</p>
-                  {item.createdAt && (
+                  {item.engagement.createdAt && (
                     <div className="accordion__entry-meta">
-                      <time dateTime={item.createdAt}>
-                        {new Date(item.createdAt).toLocaleString()}
+                      <time dateTime={item.engagement.createdAt}>
+                        {new Date(item.engagement.createdAt).toLocaleString()}
                       </time>
                     </div>
                   )}
