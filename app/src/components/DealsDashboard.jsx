@@ -402,7 +402,7 @@ const canSave = () => {
   <div className="products-header">
     
     <h3 className="products-title">Products</h3>
-    <button className="add-products-button" onClick={openProductModal}>Add Products</button>
+    <button className="btn btn--primary" onClick={openProductModal}>Add Products</button>
   </div>
 
   {productItems.map((item, idx) => (
@@ -426,14 +426,17 @@ const canSave = () => {
         <h3>Add Product to Deal</h3>
         <button className="close-button" onClick={closeProductModal}><X /></button>
       </div>
-      <div className="modal-body">
+      <div className="modal-body form-group">
         <label>Select Product</label>
         <select id="productSelect" className="modal-input">
           <option>Select Product</option>
           <option value="Condensing units">Condensing units</option>
           <option value="Cooling Fan">Cooling Fan</option>
         </select>
-        <label>Quantity</label>
+       
+      </div>
+      <div className="form-group">
+         <label>Quantity</label>
         <input type="number" id="productQty" className="modal-input" defaultValue={1} />
       </div>
       <div className="modal-footer">
