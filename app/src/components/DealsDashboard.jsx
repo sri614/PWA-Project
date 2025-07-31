@@ -13,6 +13,8 @@ const DealsDashboard = () => {
   const [errors, setErrors] = useState({});
   const [hasChanges, setHasChanges] = useState(false);
   const [isClosedLostLocked, setIsClosedLostLocked] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+
   const [engagements, setEngagements] = useState({
     NOTE: [],
     CALL: [],
@@ -22,7 +24,16 @@ const DealsDashboard = () => {
   const [editDealInline, setEditDealInline] = useState(null);
   const [dealHasChanges, setDealHasChanges] = useState(false);
   const dealInitialState = useRef(null);
-  const requiresLostReason = editDeal?.dealstage === "1094908202";
+  const requiresLostReason = editDeal?.dealstage === "1094908202" && !isSaved;
+
+  const [showProductModal, setShowProductModal] = useState(false);
+const [productItems, setProductItems] = useState([
+  { name: 'Condensing units', quantity: 2, price: 300000 }
+]);
+
+const openProductModal = () => setShowProductModal(true);
+const closeProductModal = () => setShowProductModal(false);
+
 
 
   let dealStageOptions = [
@@ -58,6 +69,8 @@ const DealsDashboard = () => {
     { label: "Lead time", value: "Lead time" },
     { label: "Price", value: "Price" },
   ];
+
+  
 
   const getDealStageLabel = (value) => {
     const match = dealStageOptions.find(option => option.value === value);
@@ -158,6 +171,7 @@ const canSave = () => {
       setEditDeal(dealData);
       initialFormState.current = JSON.stringify(dealData);
       setHasChanges(false);
+      setIsSaved(false);
       setViewMode('edit');
     } catch (err) {
       console.error('Failed to fetch deal:', err);
@@ -195,6 +209,7 @@ const canSave = () => {
 
       initialFormState.current = JSON.stringify(editDeal);
       setHasChanges(false);
+      setIsSaved(true);
       alert('Deal updated successfully!');
     } catch (err) {
       setErrors({ api: 'Failed to update deal' });
@@ -380,6 +395,70 @@ const canSave = () => {
 
         {errors.api && <p className="error">{errors.api}</p>}
       </form>
+
+
+
+<div className="products-section">
+  <div className="products-header">
+    
+    <h3 className="products-title">Products</h3>
+    <button className="add-products-button" onClick={openProductModal}>Add Products</button>
+  </div>
+
+  {productItems.map((item, idx) => (
+    <div className="product-entry" key={idx}>
+      <div className="product-info">
+        <strong>{item.name}</strong>
+        <p className="product-subtext">Qty: {item.quantity} × ₹{item.price}</p>
+      </div>
+      <div className="product-amount">₹{item.quantity * item.price}</div>
+    </div>
+  ))}
+
+  <hr className="product-divider" />
+</div>
+
+
+{showProductModal && (
+  <div className="modal-overlay">
+    <div className="modal">
+      <div className="modal-header">
+        <h3>Add Product to Deal</h3>
+        <button className="close-button" onClick={closeProductModal}><X /></button>
+      </div>
+      <div className="modal-body">
+        <label>Select Product</label>
+        <select id="productSelect" className="modal-input">
+          <option>Select Product</option>
+          <option value="Condensing units">Condensing units</option>
+          <option value="Cooling Fan">Cooling Fan</option>
+        </select>
+        <label>Quantity</label>
+        <input type="number" id="productQty" className="modal-input" defaultValue={1} />
+      </div>
+      <div className="modal-footer">
+        <button
+          className="modal-submit-button"
+          onClick={() => {
+            const name = document.getElementById("productSelect").value;
+            const quantity = parseInt(document.getElementById("productQty").value, 10);
+            const price = name === "Cooling Fan" ? 150000 : 300000;
+            if (name !== "Select Product" && quantity > 0) {
+              setProductItems([...productItems, { name, quantity, price }]);
+              closeProductModal();
+            }
+          }}
+        >
+          Add Line Item
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+
+
 
       <div className="accordion">
         {['NOTE', 'CALL', 'MEETING'].map((type) => (
