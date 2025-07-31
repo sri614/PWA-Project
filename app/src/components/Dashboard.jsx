@@ -180,6 +180,25 @@ const handleUpdateDeal = async () => {
     }
   };
 
+  
+const fetchDealEngagements = async (dealId) => {
+  try {
+    const apiKey = localStorage.getItem('user_id');
+    const response = await axios.get(`http://localhost:8000/deals/${dealId}/engagements`, {
+      headers: { 'x-api-key': apiKey }
+    });
+
+    const grouped = { NOTE: [], CALL: [], MEETING: [] };
+    response.data.engagements?.forEach(e => {
+      if (grouped[e.engagement?.type]) grouped[e.engagement?.type].push(e);
+    });
+    setEngagements(grouped);
+  } catch (err) {
+    console.error('Failed to load deal engagements', err);
+  }
+};
+
+
   const handleRowClick = async (leadId) => {
     try {
       const apiKey = localStorage.getItem('user_id');
@@ -365,6 +384,7 @@ const handleUpdateDeal = async () => {
                 onChange={handleInputChange}
                 required={required}
                 placeholder={label}
+                disabled
               />
               {errors[key] && <p className="error">{errors[key]}</p>}
             </div>
@@ -517,24 +537,27 @@ const handleUpdateDeal = async () => {
                 <div
                   className="accordion__entry"
                   key={deal.id || idx}
-                  onClick={() => {
-                    setViewMode('deal-edit')
-                    const props = deal.properties;
-                    console.log('DEAL PROPS:', props);
-                    const dealData = {
-                      id: deal.id,
-                      dealname: props.dealname || '',
-                      amount: props.amount || '',
-                      product_interest: props.product_interest || '',
-                      dealstage: props.dealstage || '',
-                      closedate: props.closedate ? new Date(props.closedate).toISOString().slice(0, 10) : '',
-                      pipeline: props.pipeline || '',
-                      hs_deal_stage_probability: props.hs_deal_stage_probability ? parseFloat(props.hs_deal_stage_probability).toFixed(2) : ''
-                    };
-                    setEditDealInline(dealData);
-                    dealInitialState.current = JSON.stringify(dealData);
-                    setDealHasChanges(false);
-                  }}
+onClick={() => {
+  setViewMode('deal-edit');
+  const props = deal.properties;
+  const dealData = {
+    id: deal.id,
+    dealname: props.dealname || '',
+    amount: props.amount || '',
+    product_interest: props.product_interest || '',
+    dealstage: props.dealstage || '',
+    closedate: props.closedate ? new Date(props.closedate).toISOString().slice(0, 10) : '',
+    pipeline: props.pipeline || '',
+    hs_deal_stage_probability: props.hs_deal_stage_probability ? parseFloat(props.hs_deal_stage_probability).toFixed(2) : ''
+  };
+  setEditDealInline(dealData);
+  dealInitialState.current = JSON.stringify(dealData);
+  setDealHasChanges(false);
+
+  // ✅ Fetch deal engagements
+  fetchDealEngagements(deal.id);
+}}
+
 >
                   <h4 className="accordion__entry-title">{deal.properties.dealname}</h4>
                   <div className="accordion__entry-details">
