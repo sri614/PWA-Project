@@ -24,7 +24,11 @@ const DealsDashboard = () => {
   const [editDealInline, setEditDealInline] = useState(null);
   const [dealHasChanges, setDealHasChanges] = useState(false);
   const dealInitialState = useRef(null);
-  const requiresLostReason = editDeal?.dealstage === "1094908202" && !isSaved;
+  const [stageManuallyChanged, setStageManuallyChanged] = useState(false);
+  const requiresLostReason = editDeal?.dealstage === "1094908202" && stageManuallyChanged;
+
+
+  
 
   const [showProductModal, setShowProductModal] = useState(false);
 const [productItems, setProductItems] = useState([
@@ -84,15 +88,15 @@ const handleStageChange = (e) => {
   const updated = { 
     ...editDeal, 
     dealstage: newStage,
-    lostReason: isClosedLost ? editDeal.lostReason : ""  // Clear only if not Closed Lost
+    lostReason: isClosedLost ? editDeal.lostReason : "" 
   };
 
+  setEditDeal(updated);
+  setStageManuallyChanged(true); // mark it as manually changed
+  setDealHasChanges(JSON.stringify(updated) !== dealInitialState.current);
+  setHasChanges(JSON.stringify(updated) !== initialFormState.current);
+};
 
-    
-    setEditDeal(updated);
-    setDealHasChanges(JSON.stringify(updated) !== dealInitialState.current);
-    setHasChanges(JSON.stringify(updated) !== initialFormState.current);
-  };
 const canSave = () => {
   if (!hasChanges) return false;
 
@@ -168,11 +172,13 @@ const canSave = () => {
 
       console.log(dealData)
 
-      setEditDeal(dealData);
-      initialFormState.current = JSON.stringify(dealData);
-      setHasChanges(false);
-      setIsSaved(false);
-      setViewMode('edit');
+     setEditDeal(dealData);
+initialFormState.current = JSON.stringify(dealData);
+setHasChanges(false);
+setIsSaved(false);
+setStageManuallyChanged(false);
+setViewMode('edit');
+
     } catch (err) {
       console.error('Failed to fetch deal:', err);
     }
@@ -400,7 +406,7 @@ const canSave = () => {
 
 <div className="products-section">
   <div className="products-header">
-    
+
     <h3 className="products-title">Products</h3>
     <button className="add-products-button" onClick={openProductModal}>Add Products</button>
   </div>
