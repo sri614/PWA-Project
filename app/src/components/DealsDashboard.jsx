@@ -9,9 +9,10 @@ const DealsDashboard = () => {
   const [deals, setDeals] = useState([]);
   const [filteredDeals, setFilteredDeals] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [editDeal, setEditDeal] = useState(null);
+  const [editDeal, setEditDeal] = useState([]);
   const [errors, setErrors] = useState({});
   const [hasChanges, setHasChanges] = useState(false);
+  const [isClosedLostLocked, setIsClosedLostLocked] = useState(false);
   const [engagements, setEngagements] = useState({
     NOTE: [],
     CALL: [],
@@ -21,8 +22,10 @@ const DealsDashboard = () => {
   const [editDealInline, setEditDealInline] = useState(null);
   const [dealHasChanges, setDealHasChanges] = useState(false);
   const dealInitialState = useRef(null);
+  const requiresLostReason = editDeal?.dealstage === "1094908202";
 
-  let dealStageOptions=[
+
+  let dealStageOptions = [
     {
       "label": "Qualified",
       "value": "1094908196"
@@ -49,10 +52,45 @@ const DealsDashboard = () => {
     }
   ]
 
+    const lostReasonOptions = [
+    { label: "Select Lost Reason", value: "" },
+    { label: "Not interested", value: "not_interested" },
+    { label: "Lead time", value: "lead_time" },
+    { label: "Price", value: "price" },
+  ];
+
   const getDealStageLabel = (value) => {
-  const match = dealStageOptions.find(option => option.value === value);
-  return match ? match.label : value;
+    const match = dealStageOptions.find(option => option.value === value);
+    return match ? match.label : value;
+  };
+
+const handleStageChange = (e) => {
+  const newStage = e.target.value;
+  const isClosedLost = newStage === "1094908202";
+
+  const updated = { 
+    ...editDeal, 
+    dealstage: newStage,
+    lostReason: isClosedLost ? editDeal.lostReason : ""  // Clear only if not Closed Lost
+  };
+
+
+    
+    setEditDeal(updated);
+    setDealHasChanges(JSON.stringify(updated) !== dealInitialState.current);
+    setHasChanges(JSON.stringify(updated) !== initialFormState.current);
+  };
+const canSave = () => {
+  if (!hasChanges) return false;
+
+  // If stage is Closed Lost, ensure Lost Reason is selected
+  if (editDeal.dealstage === "1094908202" && !editDeal.lostReason) {
+    return false;
+  }
+
+  return true;
 };
+
 
   const apiKey = localStorage.getItem('user_id');
 
@@ -109,9 +147,9 @@ const DealsDashboard = () => {
         dealstage: p.dealstage || '',
         closedate: p.closedate ? new Date(p.closedate).toISOString().slice(0, 10) : '',
         pipeline: p.pipeline || '',
-        hs_deal_stage_probability: p.hs_deal_stage_probability 
-  ? parseFloat(p.hs_deal_stage_probability).toFixed(2) 
-  : ''
+        hs_deal_stage_probability: p.hs_deal_stage_probability
+          ? parseFloat(p.hs_deal_stage_probability).toFixed(2)
+          : ''
 
       };
 
@@ -133,6 +171,10 @@ const DealsDashboard = () => {
   };
 
   const handleUpdateDeal = async () => {
+  if (editDeal.dealstage === "1094908202" && !editDeal.lostReason) {
+    alert("Please select a lost reason for Closed Lost deals.");
+    return;
+  }
     try {
       const payload = {
         dealname: editDeal.dealname,
@@ -220,11 +262,11 @@ const DealsDashboard = () => {
   const renderEditView = () => (
     <div className="dashboard-form">
       <div className="edit-header">
-        <button 
-          className="back-button" 
+        <button
+          className="back-button"
           onClick={() => setViewMode('list')}
         >
-          <ArrowLeft size={18} /> Back 
+          <ArrowLeft size={18} /> Back
         </button>
       </div>
 
@@ -236,17 +278,18 @@ const DealsDashboard = () => {
           <h2>{editDeal?.dealname}</h2>
           <p className="deal-stage">{getDealStageLabel(editDeal?.dealstage)}</p>
         </div>
-        <button 
-          className={`save-button ${hasChanges ? 'active' : ''}`}
-          onClick={handleUpdateDeal}
-          disabled={!hasChanges}
-        >
-          <Save size={18} /> Save
-        </button>
+<button
+  className={`save-button ${hasChanges ? 'active' : ''}`}
+  onClick={handleUpdateDeal}
+  disabled={!canSave()}
+>
+  <Save size={18} /> Save
+</button>
+
       </div>
 
       <Engagements leadId={editDeal?.id} type="deal" />
-      
+
       <form onSubmit={e => { e.preventDefault(); handleUpdateDeal(); }}>
         <div className="form-grid">
           {[
@@ -270,46 +313,70 @@ const DealsDashboard = () => {
           ))}
         </div>
 
- <div className="form-group">
-        <label>Pipeline</label>
-        <input name="pipeline" type='text'  value="Manufacturing" disabled/>
-      </div>
+        <div className="form-group">
+          <label>Pipeline</label>
+          <input name="pipeline" type='text' value="Manufacturing" disabled />
+        </div>
 
-       <div className="form-group">
-        <label>Close Date</label>
-        <input name="closedate" type='date' onChange={handleEditChange} value={editDeal.closedate} />
-      </div>
+        <div className="form-group">
+          <label>Close Date</label>
+          <input name="closedate" type='date' onChange={handleEditChange} value={editDeal.closedate} />
+        </div>
 
-      <div className="form-group">
-        <label>Product Interest</label>
-        <select name="product_interest" onChange={handleEditChange} value={editDeal.product_interest}>
+        <div className="form-group">
+          <label>Product Interest</label>
+          <select name="product_interest" onChange={handleEditChange} value={editDeal.product_interest}>
             <option value="">Select Product Interest</option>
             <option value="Geared Motor">Geared Motor</option>
             <option value="Drum Motor">Drum Motor</option>
             <option value="Induction Motor">Induction Motor</option>
             <option value="Vibrator Motor">Vibrator Motor</option>
           </select>
+        </div>
+
+          <div className="form-group">
+        <label>Deal Stage</label>
+        <select
+          name="dealstage"
+          value={editDeal.dealstage || ''}
+          onChange={handleStageChange}
+          // No longer disabled
+        >
+          <option value="">Select Stage</option>
+          {dealStageOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
       </div>
 
+{requiresLostReason && (
   <div className="form-group">
-    <label>Deal Stage</label>
+    <label>Lost Reason *</label>
     <select
-      name="dealstage"
-      value={editDeal.dealstage || ''}
-      onChange={(e) => {
-        const updated = { ...editDeal, dealstage: e.target.value };
-        setEditDeal(updated);
-        setDealHasChanges(JSON.stringify(updated) !== dealInitialState.current);
-      }}
+      name="lostReason"
+      value={editDeal.lostReason || ''}
+      onChange={handleEditChange}
+      required
     >
-      <option value="">Select Stage</option>
-      {dealStageOptions.map((opt) => (
+      {lostReasonOptions.map((opt) => (
         <option key={opt.value} value={opt.value}>
           {opt.label}
         </option>
       ))}
     </select>
+    {!editDeal.lostReason && (
+      <p className="error-text" style={{color:"red"}}>Please select a lost reason before saving</p>
+    )}
   </div>
+)}
+
+
+      
+
+
+ 
 
 
         {errors.api && <p className="error">{errors.api}</p>}
@@ -324,7 +391,7 @@ const DealsDashboard = () => {
                 {engagements[type]?.length || 0}
                 <span className="accordion__arrow-icon">
                   <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </span>
               </span>
@@ -347,9 +414,9 @@ const DealsDashboard = () => {
               ) : (
                 <div className="accordion__empty-state">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#666666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M12 8V12" stroke="#666666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M12 16H12.01" stroke="#666666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#666666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M12 8V12" stroke="#666666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M12 16H12.01" stroke="#666666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   <p>No {type.toLowerCase()} engagements found</p>
                 </div>
